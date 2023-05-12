@@ -1,0 +1,21 @@
+#
+# Copyright (c) 2023 Arribada Initative
+#
+
+menuconfig ARDUCAM_MEGA
+	bool "Arducam Mega"
+	default y
+	depends on DT_HAS_ARDUCAM_ENABLED
+	select SPI
+	help
+	  Enable driver for Arducam Mega camera.
+
+if ARDUCAM_MEGA
+
+config ARDUCAM_NAME
+	string "Arducam Mega Driver's name"
+	default "ARDUCAM_MEGA"
+	help
+	  This option sets the driver name.
+
+endif # ARDUCAM_MEGA

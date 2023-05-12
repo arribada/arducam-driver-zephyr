@@ -1,0 +1,9 @@
+manifest:
+  projects:
+    - name: arducam-sdk
+      path: arducam/ext/arducam-sdk
+      revision: master
+      url: https://github.com/arducam/mega.git
+  self:
+    # This repository should be cloned to
+    path: arducam
