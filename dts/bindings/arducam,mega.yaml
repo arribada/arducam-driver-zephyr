@@ -1,0 +1,5 @@
+description: Arducam Mega camera for microcontrollers
+
+compatible: "arducam,mega"
+
+include: [spi-device.yaml]

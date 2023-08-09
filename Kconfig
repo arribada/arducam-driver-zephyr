@@ -1,0 +1,5 @@
+menuconfig ARDUCAM_MEGA
+	   bool "Arducam Mega camera for microcontrollers"
+	   depends on SPI && GPIO
+	   help
+		Enable driver for Arducam Mega camera.
