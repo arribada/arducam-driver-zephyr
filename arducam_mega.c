@@ -10,7 +10,7 @@
 #define LOG_MODULE_NAME arducam_mega
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define MAX_PATH 51200
-#define SOME_REQUIRED_LEN 30
+#define CONCAT_BUFF_LEN 30
 
 struct spi_config spi_cfg = {
     .frequency = DT_PROP(DT_NODELABEL(spi0), clock_frequency),
@@ -26,7 +26,7 @@ const struct device *spi;
 struct gpio_dt_spec spec = GPIO_DT_SPEC_GET(LED, gpios);
 
 
-uint8_t cameraBusRead(uint8_t address)
+uint8_t camera_bus_read(uint8_t address)
 {
 	int ret;
 	struct spi_buf tx_buf[1];
@@ -52,13 +52,13 @@ uint8_t cameraBusRead(uint8_t address)
 	return rxdata[1];
 }
 
-uint8_t cameraReadReg(uint8_t addr)
+uint8_t camera_read_reg(uint8_t addr)
 {
-	return cameraBusRead(addr & 0x7F);
+	return camera_bus_read(addr & 0x7F);
 
 }
 
-uint8_t cameraBusWrite(uint8_t address, uint8_t value)
+uint8_t camera_bus_write(uint8_t address, uint8_t value)
 {
 
 	struct spi_buf tx_buf[2];
@@ -75,23 +75,23 @@ uint8_t cameraBusWrite(uint8_t address, uint8_t value)
 	k_sleep(K_MSEC(10));
 	return 1;
 }
-void cameraWriteReg( uint8_t addr, uint8_t val)
+void camera_write_reg( uint8_t addr, uint8_t val)
 {
-	cameraBusWrite( addr | 0x80, val);
+	camera_bus_write( addr | 0x80, val);
 }
 
 void camera_wait_idle()
 {
-    while ((cameraReadReg(CAM_REG_SENSOR_STATE) & 0X03) != CAM_REG_SENSOR_STATE_IDLE) {
+    while ((camera_read_reg(CAM_REG_SENSOR_STATE) & 0X03) != CAM_REG_SENSOR_STATE_IDLE) {
 	    k_sleep(K_MSEC(2));
 
     }
 }
 
-uint8_t cameraGetBit(uint8_t addr, uint8_t bit)
+uint8_t camera_get_bit(uint8_t addr, uint8_t bit)
 {
     uint8_t temp;
-    temp = cameraReadReg(addr);
+    temp = camera_read_reg(addr);
     temp = temp & bit;
     return temp;
 }
@@ -137,7 +137,7 @@ uint8_t cameraReadByte(){
 }
 
 
-void cameraSaveFIFO(const char* base_path, uint32_t length, char* filename){
+void camera_save_fifo(const char* base_path, uint32_t length, char* filename){
 	received_length = length;
 	char path[MAX_PATH];
 	struct fs_file_t file;
@@ -145,7 +145,7 @@ void cameraSaveFIFO(const char* base_path, uint32_t length, char* filename){
 
 	fs_file_t_init(&file);
 
-	if (base >= (sizeof(path) - SOME_REQUIRED_LEN)) {
+	if (base >= (sizeof(path) - CONCAT_BUFF_LEN)) {
 		LOG_ERR("Not enough concatenation buffer to create file paths");
 		return;
 	}
@@ -201,33 +201,33 @@ void cameraSaveFIFO(const char* base_path, uint32_t length, char* filename){
 
 int arducam_mega_take_picture(CAM_IMAGE_MODE mode, CAM_IMAGE_PIX_FMT pixel_format)
 {
-	cameraWriteReg(CAM_REG_SENSOR_RESET, CAM_SENSOR_RESET_ENABLE);
+	camera_write_reg(CAM_REG_SENSOR_RESET, CAM_SENSOR_RESET_ENABLE);
 	camera_wait_idle();
-	cameraWriteReg(0x04, 0x01);
-	cameraWriteReg(0x04, 0x02);
+	camera_write_reg(0x04, 0x01);
+	camera_write_reg(0x04, 0x02);
 	camera_wait_idle();
 	k_sleep(K_MSEC(300));
 
 	/* Set format JPG */
-	cameraWriteReg(CAM_REG_FORMAT, CAM_IMAGE_PIX_FMT_JPG); // set the data format
+	camera_write_reg(CAM_REG_FORMAT, CAM_IMAGE_PIX_FMT_JPG); // set the data format
 	camera_wait_idle(); // Wait I2c Idle
 
 	/* Set capture resolution */
-	cameraWriteReg(CAM_REG_CAPTURE_RESOLUTION, CAM_SET_CAPTURE_MODE | mode);
+	camera_write_reg(CAM_REG_CAPTURE_RESOLUTION, CAM_SET_CAPTURE_MODE | mode);
 	camera_wait_idle(); // Wait I2c Idle
 
 	/* Clear fifo flags */
 
-	cameraWriteReg(ARDUCHIP_FIFO, FIFO_CLEAR_ID_MASK);
+	camera_write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_ID_MASK);
 	/* Start capture */
-	cameraWriteReg(ARDUCHIP_FIFO, FIFO_START_MASK);
+	camera_write_reg(ARDUCHIP_FIFO, FIFO_START_MASK);
 
-	while (cameraGetBit(ARDUCHIP_TRIG, CAP_DONE_MASK) == 0)
+	while (camera_get_bit(ARDUCHIP_TRIG, CAP_DONE_MASK) == 0)
 		;
 	uint32_t len1, len2, len3, length = 0;
-	len1   = cameraReadReg(FIFO_SIZE1);
-	len2   = cameraReadReg(FIFO_SIZE2);
-	len3   = cameraReadReg(FIFO_SIZE3);
+	len1   = camera_read_reg(FIFO_SIZE1);
+	len2   = camera_read_reg(FIFO_SIZE2);
+	len3   = camera_read_reg(FIFO_SIZE3);
 	length = ((len3 << 16) | (len2 << 8) | len1) & 0xffffff;
 	LOG_INF("Image length is %d\n", length);
 	return length;
@@ -240,13 +240,13 @@ int arducam_mega_save_picture(const char* filename, const char* mount_point)
 	/* 0x87,0x40*/
 	/* Read FIFO length */
 	uint32_t len1, len2, len3, length = 0;
-	len1   = cameraReadReg(FIFO_SIZE1);
-	len2   = cameraReadReg(FIFO_SIZE2);
-	len3   = cameraReadReg(FIFO_SIZE3);
+	len1   = camera_read_reg(FIFO_SIZE1);
+	len2   = camera_read_reg(FIFO_SIZE2);
+	len3   = camera_read_reg(FIFO_SIZE3);
 	length = ((len3 << 16) | (len2 << 8) | len1) & 0xffffff;
 	LOG_INF("Image length is %d\n", length);
 
-	cameraSaveFIFO(mount_point,length,filename);
+	camera_save_fifo(mount_point,length,filename);
 
 	return 0;
 }
@@ -254,7 +254,7 @@ int arducam_mega_save_picture(const char* filename, const char* mount_point)
 int arducam_mega_get_cameraid()
 {
 	uint8_t cameraID;
-	cameraID = cameraReadReg(CAM_REG_SENSOR_ID);
+	cameraID = camera_read_reg(CAM_REG_SENSOR_ID);
 	LOG_INF("Sensor camera ID is %x\n", cameraID);
 	return cameraID;
 
@@ -417,7 +417,7 @@ CAM_CONTRAST_LEVEL arducam_mega_get_contrast(char* contrast)
 int  arducam_mega_set_saturation(CAM_SATURATION_LEVEL saturation)
 {
 	LOG_INF("Setting saturation to %d", saturation);
-	cameraWriteReg(CAM_REG_SATURATION_CONTROL, saturation);
+	camera_write_reg(CAM_REG_SATURATION_CONTROL, saturation);
 	camera_wait_idle();
 	return 0;
 }
@@ -425,7 +425,7 @@ int  arducam_mega_set_saturation(CAM_SATURATION_LEVEL saturation)
 int arducam_mega_set_contrast(CAM_CONTRAST_LEVEL contrast)
 {
 	LOG_INF("Setting contrast to %d", contrast);
-	cameraWriteReg(CAM_REG_CONTRAST_CONTROL, contrast);
+	camera_write_reg(CAM_REG_CONTRAST_CONTROL, contrast);
 	camera_wait_idle();
 	return 0;
 }
@@ -434,7 +434,7 @@ int arducam_mega_set_contrast(CAM_CONTRAST_LEVEL contrast)
 int arducam_mega_set_brightness(CAM_BRIGHTNESS_LEVEL brightness)
 {
 	LOG_INF("Setting brightness to %d", brightness);
-	cameraWriteReg(CAM_REG_BRIGHTNESS_CONTROL, brightness);
+	camera_write_reg(CAM_REG_BRIGHTNESS_CONTROL, brightness);
 	camera_wait_idle();
 	return 0;
 }
