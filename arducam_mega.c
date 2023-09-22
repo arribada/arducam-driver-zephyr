@@ -11,6 +11,9 @@
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define MAX_PATH 51200
 #define CONCAT_BUFF_LEN 30
+#define BUFFER_SIZE 0xff
+
+int received_length;
 
 struct spi_config spi_cfg = {
     .frequency = DT_PROP(DT_NODELABEL(spi0), clock_frequency),
@@ -96,13 +99,6 @@ uint8_t camera_get_bit(uint8_t addr, uint8_t bit)
     return temp;
 }
 
-#define BUFFER_SIZE 0xff
-uint8_t imageData = 0;
-uint8_t imageDataNext = 0;
-uint8_t headFlag = 0;
-unsigned int i =0;
-uint8_t imageBuff[BUFFER_SIZE] = {0};
-int received_length=0;
 
 uint8_t cameraReadByte(){
 	int ret;
@@ -138,6 +134,16 @@ uint8_t cameraReadByte(){
 
 
 void camera_save_fifo(const char* base_path, uint32_t length, char* filename){
+
+	uint8_t imageData = 0;
+	uint8_t imageDataNext = 0;
+	uint8_t headFlag = 0;
+	unsigned int i =0;
+	uint8_t imageBuff[BUFFER_SIZE] = {0};
+	int ret;
+	uint8_t sd_write_counts=0;
+	uint8_t file_opened = 0;
+
 	received_length = length;
 	char path[MAX_PATH];
 	struct fs_file_t file;
@@ -155,9 +161,6 @@ void camera_save_fifo(const char* base_path, uint32_t length, char* filename){
 	path[base++] = '/';
 	path[base] = 0;
 	strcat(&path[base], filename);
-	int ret;
-	uint8_t sd_write_counts=0;
-	uint8_t file_opened = 0;
 	while (received_length){
 		imageData = imageDataNext;
 		imageDataNext = cameraReadByte();
