@@ -73,7 +73,7 @@ uint8_t camera_bus_write(uint8_t address, uint8_t value)
 	spi_cfg.operation |= SPI_HOLD_ON_CS;
 	spi_cfg.operation |= SPI_LOCK_ON;
 	gpio_pin_toggle_dt(&spec);
-	int ret = spi_write(spi, &spi_cfg,&tx_bufs);
+	spi_write(spi, &spi_cfg,&tx_bufs);
 	gpio_pin_toggle_dt(&spec);
 	k_sleep(K_MSEC(10));
 	return 1;
@@ -235,7 +235,7 @@ int arducam_mega_take_picture(CAM_IMAGE_MODE mode, CAM_IMAGE_PIX_FMT pixel_forma
 	LOG_INF("Image length is %d\n", length);
 	return length;
 }
-int arducam_mega_save_picture(const char* filename, const char* mount_point)
+int arducam_mega_save_picture(char* filename, const char* mount_point)
 {
 	LOG_INF("Saving picture\n");
 	/* Begin function */

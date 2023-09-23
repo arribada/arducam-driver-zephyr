@@ -315,7 +315,7 @@ struct arducam_mega_config {
 
 int arducam_mega_init();
 int arducam_mega_take_picture(CAM_IMAGE_MODE mode, CAM_IMAGE_PIX_FMT pixel_format);
-int arducam_mega_save_picture(const char* filename, const char* mount_point);
+int arducam_mega_save_picture(char* filename, const char* mount_point);
 int arducam_mega_get_cameraid();
 CAM_IMAGE_MODE arducam_mega_get_resolution(char* resolution);
 
