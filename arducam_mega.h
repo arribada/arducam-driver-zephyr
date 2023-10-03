@@ -1,3 +1,14 @@
+/*
+ * This file is part of the Arducam SPI Camera project.
+ *
+ * Copyright 2021 Arducam Technology co., Ltd. All Rights Reserved.
+ * Copyright 2023 Arribada Initiative C.I.C
+ *
+ * This work is licensed under the MIT license, see the file LICENSE for
+ * details.
+ *
+ */
+
 #ifndef __ARDUCAM_MEGA_H__
 #define __ARDUCAM_MEGA_H__
 

@@ -1,3 +1,12 @@
+/*
+ * This file is part of the Arribada Time Lapse Camera project.
+ *
+ * Copyright 2023 Arribada Initiative C.I.C.
+ *
+ * This work is licensed under the MIT license, see the file LICENSE for
+ * details.
+ */
+
 #include "arducam_mega.h"
 #include <zephyr/types.h>
 #include <zephyr/sys/printk.h>
@@ -91,6 +100,7 @@ void camera_wait_idle()
     }
 }
 
+
 uint8_t camera_get_bit(uint8_t addr, uint8_t bit)
 {
     uint8_t temp;
@@ -100,7 +110,7 @@ uint8_t camera_get_bit(uint8_t addr, uint8_t bit)
 }
 
 
-uint8_t cameraReadByte(){
+uint8_t camera_read_byte(){
 	int ret;
 	uint8_t rxdata[1];
 	struct spi_buf rx_buf[1] = {
@@ -132,6 +142,94 @@ uint8_t cameraReadByte(){
 	return rxdata[0];
 }
 
+/* uint8_t buff[2048]; */
+
+uint32_t camera_read_burst(uint8_t* buff, uint32_t length)
+{
+	int ret;
+	if(received_length < length)
+		length = received_length;
+
+	/*Set fifo burst mode register*/
+	struct spi_buf tx_buf[1];
+	uint8_t fifo_reg = BURST_FIFO_READ;
+	tx_buf[0].buf = &fifo_reg;
+	tx_buf[0].len = 1;
+	struct spi_buf_set tx_bufs = {.buffers = tx_buf, .count = 1};
+	spi_cfg.operation |= SPI_HOLD_ON_CS;
+	spi_cfg.operation |= SPI_LOCK_ON;
+	gpio_pin_toggle_dt(&spec);
+	spi_write(spi, &spi_cfg,&tx_bufs);
+	/* gpio_pin_toggle_dt(&spec); */
+	/* k_sleep(K_MSEC(10)); */
+
+	/* Write a blank */
+	struct spi_buf tx_buf2[1];
+	uint8_t blank=0x00;
+	tx_buf2[0].buf = &blank;
+	tx_buf2[0].len = 1;
+	struct spi_buf_set tx_bufs2 = {.buffers = tx_buf2, .count = 1};
+	spi_cfg.operation |= SPI_HOLD_ON_CS;
+	spi_cfg.operation |= SPI_LOCK_ON;
+	/* gpio_pin_toggle_dt(&spec); */
+	spi_write(spi, &spi_cfg,&tx_bufs2);
+	/* gpio_pin_toggle_dt(&spec); */
+	/* k_sleep(K_MSEC(10)); */
+
+
+	/* Read burst */
+	/* LOG_INF("Burst reading length %d", length); */
+	struct spi_buf rx_buf[1] = {
+		{.buf=buff,   .len = length},
+	};
+	struct spi_buf_set rx_bufs = {
+		.buffers = rx_buf,
+		.count = 2 };
+
+	/* gpio_pin_toggle_dt(&spec); */
+	ret = spi_read(spi, &spi_cfg,&rx_bufs);
+	gpio_pin_toggle_dt(&spec);
+	spi_release(spi, &spi_cfg);
+	received_length -= length;
+	return length;
+
+}
+
+#define BUFF_SIZE 32768
+void camera_save_fifo_burst(const char* base_path, uint32_t image_length, char* filename){
+	char path[MAX_PATH];
+	struct fs_file_t file;
+	int base = strlen(base_path);
+	uint8_t buff[BUFF_SIZE];
+	uint32_t length;
+	int ret, sd_write_counts=0;
+	fs_file_t_init(&file);
+	received_length = image_length;
+
+	if (base >= (sizeof(path) - CONCAT_BUFF_LEN)) {
+		LOG_ERR("Not enough concatenation buffer to create file paths");
+		return;
+	}
+
+	strncpy(path, base_path, sizeof(path));
+
+	path[base++] = '/';
+	path[base] = 0;
+	strcat(&path[base], filename);
+	ret = fs_open(&file, path,FS_O_CREATE | FS_O_WRITE | FS_O_APPEND);
+	if(ret != 0){
+		LOG_ERR("Failed to create file %s %d", path, ret);
+		return;
+	}
+	LOG_INF("Opened file successfully\n");
+	while(received_length) {
+		length = camera_read_burst(buff, BUFF_SIZE);
+		ret = fs_write(&file, buff, length);
+		sd_write_counts++;
+	}
+	LOG_INF("Closed file with sd_write_counts %d\n", sd_write_counts);
+	fs_close(&file);
+}
 
 void camera_save_fifo(const char* base_path, uint32_t length, char* filename){
 
@@ -163,7 +261,7 @@ void camera_save_fifo(const char* base_path, uint32_t length, char* filename){
 	strcat(&path[base], filename);
 	while (received_length){
 		imageData = imageDataNext;
-		imageDataNext = cameraReadByte();
+		imageDataNext = camera_read_byte();
 		if (headFlag == 1)
 			{
 				imageBuff[i++]=imageDataNext;
@@ -190,7 +288,7 @@ void camera_save_fifo(const char* base_path, uint32_t length, char* filename){
 		if (imageData == 0xff && imageDataNext ==0xd9)
 			{
 				headFlag = 0;
-				LOG_INF("Closed file with sd_write_counts %d\n", sd_write_counts);
+				LOG_INF("Closed file with sd_write_counts %d received length left %d\n", sd_write_counts,received_length);
 				fs_write(&file, imageBuff, i);
 
 				fs_close(&file);
@@ -222,6 +320,7 @@ int arducam_mega_take_picture(CAM_IMAGE_MODE mode, CAM_IMAGE_PIX_FMT pixel_forma
 	/* Clear fifo flags */
 
 	camera_write_reg(ARDUCHIP_FIFO, FIFO_CLEAR_ID_MASK);
+	camera_wait_idle();
 	/* Start capture */
 	camera_write_reg(ARDUCHIP_FIFO, FIFO_START_MASK);
 
@@ -249,8 +348,7 @@ int arducam_mega_save_picture(char* filename, const char* mount_point)
 	length = ((len3 << 16) | (len2 << 8) | len1) & 0xffffff;
 	LOG_INF("Image length is %d\n", length);
 
-	camera_save_fifo(mount_point,length,filename);
-
+	camera_save_fifo_burst(mount_point,length,filename);
 	return 0;
 }
 
