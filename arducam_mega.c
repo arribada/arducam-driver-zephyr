@@ -373,10 +373,19 @@ CAM_CONTRAST_LEVEL arducam_mega_get_contrast(char *contrast)
 	/* Return default if string malformed */
 	return CAM_CONTRAST_LEVEL_DEFAULT;
 }
+
 int arducam_mega_set_saturation(CAM_SATURATION_LEVEL saturation)
 {
 	LOG_INF("Setting saturation to %d", saturation);
 	camera_write_reg(CAM_REG_SATURATION_CONTROL, saturation);
+	camera_wait_idle();
+	return 0;
+}
+
+int arducam_mega_set_autofocus(uint8_t autofocus)
+{
+	LOG_INF("Setting autofocus to %d", autofocus);
+	camera_write_reg(CAM_REG_AUTO_FOCUS_CONTROL, autofocus);
 	camera_wait_idle();
 	return 0;
 }
