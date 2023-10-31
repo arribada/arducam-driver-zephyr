@@ -281,6 +281,18 @@ typedef enum {
 	CAM_COLOR_FX_YELLOWISH,
 } CAM_COLOR_FX;
 
+/**
+ * @enum CAM_AUTO_FOCUS
+ * @brief Configure auto focus mode
+ */
+typedef enum {
+	CAM_AUTO_FOCUS_DEFAULT = 0, /**< default configuration; continuous auto focus */
+	CAM_AUTO_FOCUS_SINGLE,      /**< single auto focus   */
+	CAM_AUTO_FOCUS_CONTINUOUS,  /**< continuous auto focus   */
+	CAM_AUTO_FOCUS_PAUSE,       /**< pause continuous auto focus   */
+	CAM_AUTO_FOCUS_DISABLE,     /**< disable auto focus  */
+} CAM_AUTO_FOCUS;
+
 typedef uint8_t (*BUFFER_CALLBACK)(uint8_t *buffer,
 				   uint8_t lenght); /**<Callback function prototype  */
 
@@ -337,5 +349,6 @@ CAM_BRIGHTNESS_LEVEL arducam_mega_get_brightness(char *brightness);
 int arducam_mega_set_saturation(CAM_SATURATION_LEVEL saturation);
 int arducam_mega_set_contrast(CAM_CONTRAST_LEVEL contrast);
 int arducam_mega_set_brightness(CAM_BRIGHTNESS_LEVEL brightness);
+int arducam_mega_set_autofocus(CAM_AUTO_FOCUS autofocus);
 
 #endif /* __ARDUCAM_MEGA_H__ */
