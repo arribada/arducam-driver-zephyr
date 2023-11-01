@@ -382,7 +382,7 @@ int arducam_mega_set_saturation(CAM_SATURATION_LEVEL saturation)
 	return 0;
 }
 
-int arducam_mega_set_autofocus(uint8_t autofocus)
+int arducam_mega_set_autofocus(CAM_AUTO_FOCUS autofocus)
 {
 	LOG_INF("Setting autofocus to %d", autofocus);
 	camera_write_reg(CAM_REG_AUTO_FOCUS_CONTROL, autofocus);
