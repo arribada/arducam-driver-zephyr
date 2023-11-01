@@ -351,4 +351,5 @@ int arducam_mega_set_contrast(CAM_CONTRAST_LEVEL contrast);
 int arducam_mega_set_brightness(CAM_BRIGHTNESS_LEVEL brightness);
 int arducam_mega_set_autofocus(CAM_AUTO_FOCUS autofocus);
 
+
 #endif /* __ARDUCAM_MEGA_H__ */
