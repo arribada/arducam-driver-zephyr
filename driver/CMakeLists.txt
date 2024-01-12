@@ -1,0 +1,1 @@
+add_subdirectory_ifdef(CONFIG_VIDEO_ARDUCAM_MEGA arducam-mega)

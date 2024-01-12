@@ -50,3 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Development Environment
+.DS_Store
+
+# Zephyr
+build

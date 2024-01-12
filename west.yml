@@ -1,0 +1,24 @@
+manifest:
+  defaults:
+    revision: main
+
+  remotes:
+    - name: zephyr
+      url-base: https://github.com/zephyrproject-rtos/
+    - name: arribada
+      url-base: https://github.com/arribada/
+
+  projects:
+    - name: zephyr
+      remote: zephyr
+      path: zephyr
+      revision: v3.5.0
+      import:
+        # By using name-allowlist we can clone only the modules that are
+        # strictly needed by the application.
+        name-allowlist:
+          - cmsis # required by the ARM port
+          - hal_rpi_pico
+
+  self:
+    path: arducam-driver-zephyr
