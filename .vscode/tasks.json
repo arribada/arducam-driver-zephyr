@@ -1,0 +1,145 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "SetEnv",
+            "type": "shell",
+            "command": "west",
+            "args": [
+                "config",
+                "zephyr.base","${workspaceFolder}/../zephyr"
+            ],
+            "options": {
+                "statusbar": {
+                  "hide" : true
+                }
+              },
+            "group": "test"
+        },
+        {
+            "label": "Build",
+            "dependsOn": [
+				"SetEnv"
+			],
+            "type": "shell",
+            "command": "west",
+            "args": [
+                "build",
+                "-p","auto",
+                "-b","rpi_pico",
+                "--force",
+                "examples/sd",
+                "--",
+                "-DOPENOCD=/usr/local/bin/openocd",
+                "-DRPI_PICO_DEBUG_ADAPTER=cmsis-dap"
+            ],
+            "options": 
+            {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "ZEPHYR_TOOLCHAIN_VARIANT": "zephyr",
+                    "ZEPHYR_SDK_INSTALL_DIR": "${env:HOME}/zephyr-sdk-0.16.5"
+                }
+            },
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "absolute"
+                ]
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build Verbose",
+            "dependsOn": [
+				"SetEnv"
+			],
+            "type": "shell",
+            "command": "west",
+            "args": [
+                "-v",
+                "build",
+                "-p","auto",
+                "-b","rpi_pico",
+                "--force",
+                "examples/sd",
+                "--",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+                "-DOPENOCD=/usr/local/bin/openocd",
+                "-DRPI_PICO_DEBUG_ADAPTER=cmsis-dap"
+            ],
+            "options": 
+            {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "ZEPHYR_TOOLCHAIN_VARIANT": "zephyr",
+                    "ZEPHYR_SDK_INSTALL_DIR": "${env:HOME}/zephyr-sdk-0.16.5"
+                }
+            },
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "absolute"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "Clean",
+            "dependsOn": [
+				"SetEnv"
+			],
+            "type": "shell",
+            "command": "west",
+            "args": [
+                "build",
+                "-p","auto",
+                "-b","rpi_pico",
+                "-t","clean",
+                "--force",
+                "examples/sd",
+                "--",
+                "-DOPENOCD=/usr/local/bin/openocd",
+                "-DRPI_PICO_DEBUG_ADAPTER=cmsis-dap"
+            ],
+            "options": 
+            {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "ZEPHYR_TOOLCHAIN_VARIANT": "zephyr",
+                    "ZEPHYR_SDK_INSTALL_DIR": "${env:HOME}/zephyr-sdk-0.16.5"
+                }
+            },
+            "group": "build"
+        },
+        {
+            "label": "Flash",
+            "dependsOn": [
+				"Build"
+			],
+            "type": "shell",
+            "command": "west",
+            "args": [
+                "flash"
+            ],
+            "options": 
+            {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "ZEPHYR_TOOLCHAIN_VARIANT": "zephyr",
+                    "ZEPHYR_SDK_INSTALL_DIR": "${env:HOME}/zephyr-sdk-0.16.5"
+                }
+            },
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": [
+                    "absolute"
+                ]
+            },
+            "group": "build"
+        }
+    ]
+}
