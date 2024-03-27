@@ -56,3 +56,4 @@ dkms.conf
 
 # Zephyr
 build
+.vscode-ctags

@@ -12,13 +12,19 @@ manifest:
     - name: zephyr
       remote: zephyr
       path: zephyr
-      revision: v3.5.0
+      revision: v3.6.0
       import:
         # By using name-allowlist we can clone only the modules that are
         # strictly needed by the application.
         name-allowlist:
           - cmsis # required by the ARM port
+          - fatfs # required by file system
           - hal_rpi_pico
+          - hal_espressif
+    - name: arribada-custom-boards
+      path: deps/arribada-custom-boards
+      revision: v3.5.0
+      url: https://github.com/arribada/custom-boards-zephyr
 
   self:
     path: arducam-driver-zephyr
